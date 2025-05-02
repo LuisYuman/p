@@ -1,0 +1,31 @@
+<programa> ::= <instruccion> | <instruccion> <programa>
+
+<instruccion> ::= <declaracion> | <asignacion> | <impresion> | <entrada> | <condicional> | <ciclo> | <funcion> | <retorno>
+
+<declaracion> ::= <tipo> <identificador> ":=" <constante>
+
+<asignacion> ::= <identificador> ":=" <expresion>
+
+<impresion> ::= "print" <identificador>
+
+<entrada> ::= "input" <identificador>
+
+<condicional> ::= "if" <identificador> <operador_relacional> <constante> "{" <programa> "}"
+
+<ciclo> ::= "while" <identificador> <operador_relacional> <constante> "{" <programa> "}"
+
+<funcion> ::= "function" <identificador> "{" <programa> "}"
+
+<retorno> ::= "return" <valor>
+
+<expresion> ::= <identificador> | <constante> | <identificador> <operador_aritmetico> <constante>
+
+<tipo> ::= "int" | "float" | "string"
+
+<identificador> ::= cadena que comienza con letra y puede contener letras o dígitos (máx. 15 caracteres)
+
+<constante> ::= número entero, número decimal, texto entre comillas o booleano ("true" | "false")
+
+<operador_aritmetico> ::= "+" | "-" | "*" | "/" | "%"
+
+<operador_relacional> ::= ">" | "<" | ">=" | "<=" | "==" | "!="
