@@ -1,5 +1,6 @@
 import re
 import sys
+import procesador_instrucciones
 
 # Lenguaje: GremorySintax
 # Contexto: Lenguaje educativo para practicar conceptos de compiladores.
@@ -60,94 +61,97 @@ class AnalizadorLexico:
                 print(f'Linea {error[1]}: {error[0]} -> {error[2]}')
 
     def generar_arbol_derivacion(self, tokens):
+        from procesador_instrucciones import procesar_instruccion
         print("\nArbol de Derivacion:")
         i = 0
         while i < len(tokens):
             token, tipo = tokens[i]
-            if token == 'if':
-                print("<programa>")
-                print("|-- <condicional>")
-                print("|   |-- \"if\"")
-                i += 1  # Avanza después de procesar "if"
-                if i + 2 < len(tokens) and tokens[i+1][1] == 'OPERADOR RELACIONAL':
-                    print("|   |-- <condicion>")
-                    print(f"|   |   |-- <identificador> -> {tokens[i][0]}")
-                    print(f"|   |   |-- <operador_relacional> -> {tokens[i+1][0]}")
-                    print(f"|   |   `-- <constante> -> {tokens[i+2][0]}")
-                    i += 3  # Avanza después de procesar la condición
-                if i < len(tokens) and tokens[i][0] == '{':
-                    print("|   |-- \"{\"")
-                    i += 1  # Avanza después de procesar "{"
-                    print("|   |-- <programa>")
-                    while i < len(tokens) and tokens[i][0] != '}':
-                        if tokens[i][0] == 'print':
-                            print("|   |   `-- <impresion>")
-                            print("|   |       |-- \"print\"")
-                            if i + 1 < len(tokens):
-                                print(f"|   |       `-- <identificador> -> {tokens[i+1][0]}")
-                                i += 2  # Avanza después de procesar "print"
-                            else:
-                                i += 1
+            try:
+                if token == 'if':
+                    print("<programa>")
+                    print("|-- <condicional>")
+                    print("|   |-- \"if\"")
+                    i += 1  # Avanza después de procesar "if"
+                    if i + 2 < len(tokens) and tokens[i+1][1] == 'OPERADOR RELACIONAL':
+                        print("|   |-- <condicion>")
+                        print(f"|   |   |-- <identificador> -> {tokens[i][0]}")
+                        print(f"|   |   |-- <operador_relacional> -> {tokens[i+1][0]}")
+                        print(f"|   |   `-- <constante> -> {tokens[i+2][0]}")
+                        i += 3  # Avanza después de procesar la condición
+                    else:
+                        print("Error sintáctico: Condición incompleta en 'if'")
+                        i += 1  # Avanza para evitar bucle infinito
+                        continue
+                    if i < len(tokens) and tokens[i][0] == '{':
+                        print("|   |-- \"{\"")
+                        i += 1  # Avanza después de procesar "{"
+                        print("|   |-- <programa>")
+                        while i < len(tokens) and tokens[i][0] != '}':
+                            i = procesar_instruccion(tokens, i, nivel=3)
+                        if i < len(tokens) and tokens[i][0] == '}':
+                            print("|   `-- \"}\"")
+                            i += 1  # Avanza después de procesar "}"
                         else:
-                            i += 1  # Avanza si no es un "print"
-                    if i < len(tokens) and tokens[i][0] == '}':
-                        print("|   `-- \"}\"")
-                        i += 1  # Avanza después de procesar "}"
-            elif token == 'while':
-                print("<programa>")
-                print("|-- <ciclo>")
-                print("|   |-- \"while\"")
-                i += 1  # Avanza después de procesar "while"
-                if i + 2 < len(tokens) and tokens[i+1][1] == 'OPERADOR RELACIONAL':
-                    print("|   |-- <condicion>")
-                    print(f"|   |   |-- <identificador> -> {tokens[i][0]}")
-                    print(f"|   |   |-- <operador_relacional> -> {tokens[i+1][0]}")
-                    print(f"|   |   `-- <constante> -> {tokens[i+2][0]}")
-                    i += 3  # Avanza después de procesar la condición
-                if i < len(tokens) and tokens[i][0] == '{':
-                    print("|   |-- \"{\"")
-                    i += 1  # Avanza después de procesar "{"
-                    print("|   |-- <programa>")
-                    while i < len(tokens) and tokens[i][0] != '}':
-                        if tokens[i][1] == 'IDENTIFICADOR' and i + 2 < len(tokens) and tokens[i+1][0] == ':=':
-                            print("|   |   `-- <asignacion>")
-                            print(f"|   |       |-- <identificador> -> {tokens[i][0]}")
-                            print("|   |       |-- \":=\"")
-                            print(f"|   |       `-- <expresion> -> {tokens[i+2][0]}")
-                            i += 3  # Avanza después de procesar la asignación
+                            print("Error sintáctico: Falta '}' para cerrar el bloque 'if'")
+                            i += 1
+                elif token == 'while':
+                    print("<programa>")
+                    print("|-- <ciclo>")
+                    print("|   |-- \"while\"")
+                    i += 1  # Avanza después de procesar "while"
+                    if i + 2 < len(tokens) and tokens[i+1][1] == 'OPERADOR RELACIONAL':
+                        print("|   |-- <condicion>")
+                        print(f"|   |   |-- <identificador> -> {tokens[i][0]}")
+                        print(f"|   |   |-- <operador_relacional> -> {tokens[i+1][0]}")
+                        print(f"|   |   `-- <constante> -> {tokens[i+2][0]}")
+                        i += 3  # Avanza después de procesar la condición
+                    else:
+                        print("Error sintáctico: Condición incompleta en 'while'")
+                        i += 1  # Avanza para evitar bucle infinito
+                        continue
+                    if i < len(tokens) and tokens[i][0] == '{':
+                        print("|   |-- \"{\"")
+                        i += 1  # Avanza después de procesar "{"
+                        print("|   |-- <programa>")
+                        while i < len(tokens) and tokens[i][0] != '}':
+                            i = procesar_instruccion(tokens, i, nivel=3)
+                        if i < len(tokens) and tokens[i][0] == '}':
+                            print("|   `-- \"}\"")
+                            i += 1  # Avanza después de procesar "}"
                         else:
-                            i += 1  # Avanza si no es una asignación
-                    if i < len(tokens) and tokens[i][0] == '}':
-                        print("|   `-- \"}\"")
-                        i += 1  # Avanza después de procesar "}")
-            elif token == 'function':
-                print("<programa>")
-                print("|-- <funcion>")
-                print("|   |-- \"function\"")
-                if i + 1 < len(tokens) and tokens[i+1][1] == 'IDENTIFICADOR':
-                    print(f"|   |-- <identificador> -> {tokens[i+1][0]}")
-                    i += 2  # Avanza después de procesar "function <identificador>"
-                if i < len(tokens) and tokens[i][0] == '{':
-                    print("|   |-- \"{\"")
-                    i += 1  # Avanza después de procesar "{"
-                    print("|   |-- <programa>")
-                    while i < len(tokens) and tokens[i][0] != '}':
-                        if tokens[i][0] == 'print':
-                            print("|   |   `-- <impresion>")
-                            print("|   |       |-- \"print\"")
-                            if i + 1 < len(tokens):
-                                print(f"|   |       `-- <cadena> -> {tokens[i+1][0]}")
-                                i += 2  # Avanza después de procesar "print"
-                            else:
-                                i += 1
+                            print("Error sintáctico: Falta '}' para cerrar el bloque 'while'")
+                            i += 1
+                elif token == 'function':
+                    print("<programa>")
+                    print("|-- <funcion>")
+                    print("|   |-- \"function\"")
+                    if i + 1 < len(tokens) and tokens[i+1][1] == 'IDENTIFICADOR':
+                        print(f"|   |-- <identificador> -> {tokens[i+1][0]}")
+                        i += 2  # Avanza después de procesar "function <identificador>"
+                    else:
+                        print("Error sintáctico: Falta identificador después de 'function'")
+                        i += 1
+                        continue
+                    if i < len(tokens) and tokens[i][0] == '{':
+                        print("|   |-- \"{\"")
+                        i += 1  # Avanza después de procesar "{"
+                        print("|   |-- <programa>")
+                        while i < len(tokens) and tokens[i][0] != '}':
+                            i = procesar_instruccion(tokens, i, nivel=3)
+                        if i < len(tokens) and tokens[i][0] == '}':
+                            print("|   `-- \"}\"")
+                            i += 1  # Avanza después de procesar "}"
                         else:
-                            i += 1  # Avanza si no es un "print"
-                    if i < len(tokens) and tokens[i][0] == '}':
-                        print("|   `-- \"}\"")
-                        i += 1  # Avanza después de procesar "}")
-            else:
-                i += 1  # Avanza si no es una estructura reconocida
+                            print("Error sintáctico: Falta '}' para cerrar el bloque 'function'")
+                            i += 1
+                else:
+                    print(f"Error sintáctico: Token inesperado '{token}'")
+                    i += 1  # Avanza para evitar bucle infinito
+            except IndexError:
+                print("Error sintáctico: Índice fuera de rango")
+                break
 
+    
     def verificar_contra_bnf(self, tokens):
         print("\nVerificacion BNF (simulada):")
         if ('if', 'PALABRA RESERVADA') in tokens and (':=', 'OPERADOR DE ASIGNACION') in tokens:
@@ -157,20 +161,57 @@ class AnalizadorLexico:
 
 # Codigo de prueba
 codigo_prueba = """
+    function iniciar {
+    int edad := 25;
+    float altura := 1.75;
+    string nombre := "Luis";
+    if edad > 18 {
+        print nombre;
+    }
+    while edad > 0 {
+        edad := edad - 1;
+    }
+}
+"""
+# Codigo de prueba con errores
+codigo_prueba_con_errores = """
     int 123x := 10;
-    float y := 2.5;
-    string mensaje := "Hola Mundo";
-    if x > 5 {
-        print mensaje;
-    }
-    while x > 0 {
-        x := x - 1;
-    }
+    float $y := 2.5;
+    string nombre := "Luis@";
+    print #nombre;
+"""
+# Codigo de pruebas validas sintacticamente
+codigo_prueba_valido_sintactico = """
     function main {
-        print "Hola Mundo desde la funcion!";
+    print "Hola Mundo";
+    }
+
+    int edad := 25;
+
+    if edad > 18 {
+    print edad;
+    }
+
+    while edad > 0 {
+    edad := edad - 1;
     }
 """
+# Codigo de pruebas validas sintacticamente
+codigo_prueba_invalido_sintactico = """
+    int := 10;
 
+    if > 5 {
+    print edad;
+    }
+
+    while edad {
+    edad :=;
+    }
+
+    function {
+    print "sin nombre";
+    }
+"""
 
 analizador = AnalizadorLexico()
 tokens = analizador.analizar_codigo(codigo_prueba)
